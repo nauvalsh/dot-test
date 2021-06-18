@@ -1,6 +1,9 @@
 const request = require('supertest');
 const app = require('../../main');
 const { sequelize, Product, Category } = require('../../models/index');
+const redis = require('../../redis');
+
+afterAll(() => redis.closeInstance());
 
 // sebelum semua test
 beforeAll(async () => {
@@ -10,6 +13,7 @@ beforeAll(async () => {
 
 // sebelum tiap2 test / isolasi tes
 beforeEach(async () => {
+  await redis.redisFlushAsync();
   await Category.destroy({ truncate: true, cascade: true });
   await Product.destroy({ truncate: true, cascade: true });
 });
@@ -44,8 +48,6 @@ describe('List Products', () => {
     const response = await getProducts();
     expect(response.body).toEqual({
       status: 'success',
-      count: 0,
-      results: 0,
       data: {
         products: []
       }

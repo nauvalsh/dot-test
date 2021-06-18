@@ -20,7 +20,6 @@ exports.register = catchAsync(async (req, res, next) => {
 });
 
 exports.login = catchAsync(async (req, res, next) => {
-  console.log(req.body);
   const user = await loginWithEmailAndPassword(req.body);
   const token = await generateAuthToken(user);
 

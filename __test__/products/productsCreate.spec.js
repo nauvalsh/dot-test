@@ -5,7 +5,16 @@ const { sequelize, Product, Category, User } = require('../../models/index');
 // sebelum semua test
 beforeAll(async () => {
   await sequelize.sync();
-
+  const [user, created] = await User.findOrCreate({
+    where: { email: 'nauvalsh@gmail.com' },
+    defaults: {
+      name: 'Nauval',
+      email: 'nauvalsh@gmail.com',
+      phoneNumber: '081231231234',
+      password: 'test123',
+      role: 'admin'
+    }
+  });
   return true;
 });
 
@@ -34,7 +43,6 @@ describe('Create Products', () => {
 
   const createProduct = async (bearer) => {
     let agent = request(app).post('/api/v1/products');
-    console.log('BEARER: ', bearer);
     agent.set('Authorization', `Bearer ${bearer}`);
 
     return agent.send({
@@ -56,7 +64,7 @@ describe('Create Products', () => {
 
   it('saves new product', async () => {
     const token = await auth();
-    const response = await createProduct(token);
+    await createProduct(token);
 
     const products = await Product.findAll({});
 

@@ -12,6 +12,7 @@ const morgan = require('morgan');
 const cors = require('cors');
 const compression = require('compression');
 const xss = require('xss-clean');
+const redis = require('redis');
 const helmet = require('helmet');
 const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');

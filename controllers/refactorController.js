@@ -1,6 +1,7 @@
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const { pagination } = require('../utils/helper');
+const redis = require('../redis');
 
 exports.createOne = (Model, table, fileField = false, userId = false) =>
   catchAsync(async (req, res, next) => {
@@ -11,6 +12,8 @@ exports.createOne = (Model, table, fileField = false, userId = false) =>
     // console.log(rewq.file);
 
     const newData = await Model.create(req.body);
+
+    await redis.redisDelAsync(table);
 
     return res.status(200).json({
       status: 'success',
@@ -27,6 +30,8 @@ exports.deleteOne = (Model, table) =>
     if (doc === 0) {
       return next(new AppError(`No document found with id ${req.params.id}`, 404));
     }
+
+    await redis.redisDelAsync(table);
 
     return res.status(200).json({
       status: 'success',
@@ -57,6 +62,8 @@ exports.updateOne = (Model, table, includeModel = null) =>
       }
     });
 
+    await redis.redisDelAsync(table);
+
     return res.status(200).json({
       status: 'success',
       [table]: result
@@ -65,17 +72,29 @@ exports.updateOne = (Model, table, includeModel = null) =>
 
 exports.getAll = (Model, table, include) =>
   catchAsync(async (req, res, next) => {
+    let redisData = await redis.redisGetAsync(table);
+
+    if (redisData !== null) {
+      return res.status(200).json({
+        status: 'success',
+
+        data: {
+          [table]: JSON.parse(redisData)
+        }
+      });
+    }
+
     const { count, rows } = await Model.findAndCountAll({
       attributes: { exclude: ['createdAt', 'updatedAt'] },
       ...pagination(req),
       include
     });
 
+    await redis.redisSetAsync(table, 500, JSON.stringify(rows));
+
     // Response Query
     res.status(200).json({
       status: 'success',
-      count: count,
-      results: rows.length,
       data: {
         [table]: rows
       }
