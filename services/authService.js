@@ -7,25 +7,6 @@ const { tokenTypes } = require('../config/tokens');
 /**
  *
  * @param {Object} body
- * @returns New User
- */
-const registerNewUser = async (body) => {
-  const { name, email, phoneNumber, password } = body;
-
-  const user = await User.create({
-    name,
-    email,
-    phoneNumber,
-    password
-  });
-
-  user.password = undefined;
-  return user;
-};
-
-/**
- *
- * @param {Object} body
  * @returns User
  */
 const loginWithEmailAndPassword = async (body) => {

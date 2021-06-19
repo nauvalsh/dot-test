@@ -35,9 +35,7 @@ exports.deleteOne = (Model, table) =>
 
     return res.status(200).json({
       status: 'success',
-      data: {
-        [table]: doc
-      }
+      message: 'Data has been deleted successfully'
     });
   });
 
@@ -54,9 +52,9 @@ exports.getOne = (Model, table, includeModel = null) =>
     });
   });
 
-exports.updateOne = (Model, table, includeModel = null) =>
+exports.updateOne = (Model, table) =>
   catchAsync(async (req, res) => {
-    let result = await Model.update(req.body, {
+    let [updatedRows] = await Model.update(req.body, {
       where: {
         id: req.params.id
       }
@@ -66,7 +64,7 @@ exports.updateOne = (Model, table, includeModel = null) =>
 
     return res.status(200).json({
       status: 'success',
-      [table]: result
+      [table]: updatedRows
     });
   });
 

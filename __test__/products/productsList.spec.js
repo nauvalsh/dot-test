@@ -44,7 +44,7 @@ describe('List Products', () => {
     expect(response.status).toBe(200);
   });
 
-  it('returns results and count as response body', async () => {
+  it('returns status & data object as response body', async () => {
     const response = await getProducts();
     expect(response.body).toEqual({
       status: 'success',

@@ -2,40 +2,26 @@ const passport = require('passport');
 const httpStatus = require('http-status');
 const AppError = require('../utils/appError');
 
-const verifyCallback = (req, resolve, reject, roles) => async (
-  err,
-  user,
-  info
-) => {
-  if (err || info || !user) {
-    return reject(
-      new AppError(
-        err || info || 'Please authenticate',
-        httpStatus.UNAUTHORIZED
-      )
-    );
-  }
-  req.user = user;
-
-  if (roles.length) {
-    if (!roles.includes(req.user.role)) {
-      return reject(new AppError(`Forbidden`, httpStatus.FORBIDDEN));
-    }
-  }
-
-  resolve();
-};
-
 const auth = (...roles) => async (req, res, next) => {
-  return new Promise((resolve, reject) => {
-    passport.authenticate(
-      'jwt',
-      { session: false },
-      verifyCallback(req, resolve, reject, roles)
-    )(req, res, next);
-  })
-    .then(() => next())
-    .catch((err) => next(err));
+  passport.authenticate('jwt', async (err, user, info) => {
+    try {
+      if (err || !user) {
+        return next(
+          new AppError(err || info || 'Please authenticate', httpStatus.UNAUTHORIZED)
+        );
+      }
+
+      if (roles.length) {
+        if (!roles.includes(user.role)) {
+          return next(new AppError(`Forbidden`, httpStatus.FORBIDDEN));
+        }
+      }
+
+      return next();
+    } catch (error) {
+      return next(error);
+    }
+  })(req, res, next);
 };
 
 module.exports = auth;

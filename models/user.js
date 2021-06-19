@@ -30,17 +30,7 @@ module.exports = (sequelize, DataTypes) => {
       phoneNumber: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
-        valdate: {
-          isNumber: {
-            args: true,
-            msg: 'Only digits are allowed'
-          },
-          len: {
-            args: [10, 13],
-            msg: 'Please insert an valid phone number'
-          }
-        }
+        unique: true
       },
       password: {
         type: DataTypes.STRING

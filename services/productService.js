@@ -1,5 +1,5 @@
 const AppError = require('../utils/appError');
-const { Category, Product } = require('../models/index');
+const { Category, Product, sequelize } = require('../models/index');
 const config = require('../config/config');
 
 /**
@@ -23,6 +23,28 @@ let getProductByCategory = async (categoryId) => {
   return products;
 };
 
+let createCatAndProduct = async (body) => {
+  const transaction = await sequelize.transaction();
+
+  try {
+    const category = await Category.create(body.category, { transaction });
+    const product = await Product.create(
+      { categoryId: category.id, ...body.product },
+      { transaction }
+    );
+
+    await transaction.commit();
+
+    return { category, product };
+  } catch (e) {
+    console.log(e);
+    await transaction.rollback();
+
+    throw e;
+  }
+};
+
 module.exports = {
-  getProductByCategory
+  getProductByCategory,
+  createCatAndProduct
 };

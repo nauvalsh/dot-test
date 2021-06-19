@@ -1,4 +1,5 @@
 const request = require('supertest');
+const fetch = require('node-fetch');
 const app = require('../../main');
 const { sequelize, Product, Category, User } = require('../../models/index');
 
@@ -15,6 +16,7 @@ beforeAll(async () => {
       role: 'admin'
     }
   });
+
   return true;
 });
 
@@ -43,9 +45,9 @@ describe('Create Products', () => {
 
   const createProduct = async (bearer) => {
     let agent = request(app).post('/api/v1/products');
-    agent.set('Authorization', `Bearer ${bearer}`);
+    if (bearer) agent.set('Authorization', `Bearer ${bearer}`);
 
-    return agent.send({
+    return await agent.send({
       categoryId: 1,
       productName: `producttest-${1}`,
       price: 1234,
@@ -53,6 +55,36 @@ describe('Create Products', () => {
       isActive: true
     });
   };
+
+  const createCategoryAndProduct = async (bearer) => {
+    let agent = request(app).post('/api/v1/products/all');
+    if (bearer) agent.set('Authorization', `Bearer ${bearer}`);
+
+    return agent.send({
+      category: { categoryName: 'Tes Cat 5' },
+      product: {
+        productName: `producttest-${1}`,
+        price: 1234,
+        desc: `test`,
+        isActive: true
+      }
+    });
+  };
+
+  it('returns 401 unauthorized when request without bearer token', async () => {
+    const res = await fetch('http://localhost:5000/api/v1/products', {
+      method: 'POST',
+      body: JSON.stringify({
+        categoryId: 1,
+        productName: `producttest-${1}`,
+        price: 1234,
+        desc: `test`,
+        isActive: true
+      })
+    });
+
+    expect(res.status).toBe(401);
+  });
 
   it('returns 200 OK when post product request is success', async () => {
     const token = await auth();
@@ -69,5 +101,41 @@ describe('Create Products', () => {
     const products = await Product.findAll({});
 
     expect(products.length).toEqual(1);
+  });
+
+  it('returns 200 OK when post category & product request is success', async () => {
+    const token = await auth();
+
+    const response = await createCategoryAndProduct(token); // .expect(200, done);
+
+    expect(response.status).toBe(200);
+  });
+
+  it('returns 401 unauthorized when request without bearer token', async () => {
+    const res = await fetch('http://localhost:5000/api/v1/products/all', {
+      method: 'POST',
+      body: JSON.stringify({
+        category: { categoryName: 'Tes Cat 5' },
+        product: {
+          productName: `producttest-${1}`,
+          price: 1234,
+          desc: `test`,
+          isActive: true
+        }
+      })
+    });
+
+    expect(res.status).toBe(401);
+  });
+
+  it('saves new category & product', async () => {
+    const token = await auth();
+    await createCategoryAndProduct(token);
+
+    const categories = await Category.findAll({});
+    const products = await Product.findAll({});
+
+    expect(products.length).toEqual(1);
+    expect(categories.length).toEqual(2);
   });
 });
